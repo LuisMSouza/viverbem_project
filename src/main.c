@@ -131,7 +131,6 @@ int main()
             cancelaConsulta(Consultas);
             break;
         case 5:
-        ImprimeConsultas()
             break;
         case 6:
             system("cls");
@@ -381,5 +380,4 @@ void cancelaConsulta(FILE *Consultas)
     printf("\nCódigo da consulta: ");
     scanf("%d", &codConsulta);
     remove('./data/consultas.txt');
-
 }
