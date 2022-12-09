@@ -11,7 +11,7 @@ typedef struct
 {
     int ddd;
     int numero;
-}Telefone;
+} Telefone;
 
 Telefone telefoneEntity;
 
@@ -32,23 +32,43 @@ PacienteCad pacienteEntity;
 typedef struct
 {
     int cod, num;
-    char nome[50], especialidade[50];
+    int maxConsultas;
+    char nome[50], especialidade[50], turno[20];
 } MedicoCad;
+
+MedicoCad medicosEntity;
 
 typedef struct
 {
     int dia, mes, ano;
-} DataNasc;
+    char hora[8];
+} Data;
 
-DataNasc Registro(char message[])
+Data Registro(char message[], int type)
 {
-    DataNasc user;
+    Data d;
 
     printf("%s (dd/mm/aaaa): ", message);
-    scanf("%i/%i/%i", &user.dia, &user.mes, &user.ano);
+    scanf("%i/%i/%i", &d.dia, &d.mes, &d.ano);
+    if (type)
+    {
+        printf("%s (xx:xx): ", message);
+        fflush(stdin);
+        gets(d.hora);
+    }
 
-    return (user);
+    return (d);
 }
+
+Data dataEntity;
+
+typedef struct
+{
+    int cod, medID, pacienteID;
+    Data data;
+} ConsultaCad;
+
+ConsultaCad createConsulta;
 
 void IniciarArquivos()
 {
@@ -87,36 +107,42 @@ int main()
     IniciarArquivos(Pacientes, Medicos, Consultas);
 
     int op;
+    do
+    {
         printf(
             "Sistema Viver Bem\n\nSeja Bem vindo!\n\nDigite o número "
-            "correspondente ao que deseja abaixo: \n\n1 -- Cadastrar cliente --\n2 -- "
-            "Cadastrar consulta --\n3 -- Cadastrar médico --\n4 -- Sair do sistema --\n\n-> ");
+            "correspondente ao que deseja abaixo: \n\n1 -- Cadastrar paciente --\n2 -- "
+            "Cadastrar médico --\n3 -- Cadastrar consulta --\n4 -- Cancelar Consulta --\n5 -- Ver consultas --\n6 -- Sair do sistema --\n\n-> ");
         scanf("%i", &op);
-    while (op > 4 || op < 1)
-    {
-        system("cls");
-        printf(
-            "Sistema Viver Bem\n\nSeja Bem vindo!\n\nDigite o número "
-            "correspondente ao que deseja abaixo: \n\n1 -- Cadastrar cliente --\n2 -- "
-            "Cadastrar consulta --\n3 -- Cadastrar médico --\n4 -- Sair do sistema --\n\n-> ");
-        scanf("%i", &op);
-    }
-    switch (op)
-    {
-    case 1:
-        cadastraPaciente(Pacientes);
-        break;
-    case 2:
-        // CadConsulta(Medicos);
-        break;
-    case 3:
-        cadastraMedico(Medicos);
-        break;
-    case 4:
-        system("cls");
-        printf("Programa finalizado. Até breve!\n");
-        break;
-    }
+        switch (op)
+        {
+        case 1:
+            cadastraPaciente(Pacientes);
+            break;
+
+        case 2:
+            cadastraMedico(Medicos);
+            break;
+
+        case 3:
+            cadastraConsulta(Consultas, Medicos, Pacientes);
+            break;
+        case 4:
+            cancelaConsulta(Consultas);
+            break;
+        case 5:
+        ImprimeConsultas()
+            break;
+        case 6:
+            system("cls");
+            printf("Programa finalizado. Até breve!\n");
+            break;
+
+        default:
+            printf("Opção inválida");
+            break;
+        }
+    } while (op != 4);
     return 0;
 }
 
@@ -164,14 +190,15 @@ void cadastraPaciente(FILE *Pacientes)
         fflush(stdin);
         gets(pacienteEntity.nome);
 
-
+        Registro("Digite a data de nascimento: ", 0);
+        cadastraTelefone(&pacienteEntity.num);
         CadEndereco(&pacienteEntity.endereco);
 
         fseek(Pacientes, 0, SEEK_END);
         fwrite(&pacienteEntity, sizeof(pacienteEntity), 1, Pacientes);
         fflush(Pacientes);
 
-        printf("\n Paciente cadastrado com sucesso!");
+        printf("\n Paciente cadastrado com sucesso!\n");
     }
     else
     {
@@ -220,13 +247,14 @@ void cadastraMedico(FILE *Medicos)
         printf("Nome: ");
         fflush(stdin);
         gets(m.nome);
+        m.maxConsultas = 0;
 
         printf("Especialidadde: ");
         fflush(stdin);
         gets(m.especialidade);
 
         cadastraTelefone(&m.num);
-        
+
         fseek(Medicos, 0, SEEK_END);
         fwrite(&m, sizeof(m), 1, Medicos);
         fflush(Medicos);
@@ -264,13 +292,94 @@ int encontraMedico(FILE *Medicos, int codigo)
     }
 }
 
-void cadastraTelefone(Telefone *cad){
+void cadastraTelefone(Telefone *cad)
+{
     printf("DDD do telefone:    ");
     fflush(stdin);
     scanf("%d", &telefoneEntity.ddd);
     printf("Número do telefone: ");
     fflush(stdin);
-    scanf("%i",&telefoneEntity.numero);
+    scanf("%i", &telefoneEntity.numero);
 
     *cad = telefoneEntity;
+}
+
+int verifyConsulting(FILE *Consultas, int codigo)
+{
+    int posicao = -1, find = 0;
+    fseek(Consultas, 0, SEEK_SET);
+    fread(&createConsulta, sizeof(createConsulta), 1, Consultas);
+    while (!feof(Consultas) && !find)
+    {
+        posicao++;
+        if (createConsulta.cod == codigo)
+        {
+            find = 1;
+        }
+        fread(&createConsulta, sizeof(createConsulta), 1, Consultas);
+    }
+    if (find)
+    {
+        return posicao;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+void cadastraConsulta(FILE *Consultas, FILE *Medicos, FILE *Pacientes)
+{
+    system("cls");
+    MedicoCad m;
+    printf("\n Cadastrar Consulta\n\n");
+    int posicaomedico, posicaopaciente, position, codigo, codepaciente, codemedico;
+    printf("\nCódigo da consulta: ");
+    scanf("%d", &codigo);
+    position = verifyConsulting(Consultas, codigo);
+    if (position == -1)
+    {
+        createConsulta.cod = codigo;
+        printf("Digite o codigo do medico: ");
+        scanf("%i", &codemedico);
+        posicaomedico = encontraMedico(Medicos, codemedico);
+
+        if (posicaomedico != -1)
+        {
+            printf("Digite o codigo do paciente: ");
+            scanf("%i", &codepaciente);
+            posicaopaciente = VerifyId(Pacientes, codepaciente);
+            if (posicaopaciente != -1)
+            {
+                createConsulta.medID = codemedico;
+                createConsulta.pacienteID = codepaciente;
+                Registro("Digite a data da consulta: ", 1);
+                fwrite(&createConsulta, sizeof(createConsulta), 1, Consultas);
+                fflush(Consultas);
+                printf("Consulta registrada com sucesso!");
+                fclose(Consultas);
+            }
+            else
+            {
+                printf("Não é possivel criar essa consulta. Codigo do paciente inválido!\n");
+            }
+        }
+        else
+        {
+            printf("Não é possivel criar essa consulta. Codigo do medico inválido!\n");
+        }
+    }
+    else
+    {
+        printf("Não é possivel criar essa consulta. Código de consulta existente!\n");
+    }
+}
+
+void cancelaConsulta(FILE *Consultas)
+{
+    int codConsulta;
+    printf("\nCódigo da consulta: ");
+    scanf("%d", &codConsulta);
+    remove('./data/consultas.txt');
+
 }
