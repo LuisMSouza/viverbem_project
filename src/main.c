@@ -141,7 +141,7 @@ int main()
             printf("Opção inválida");
             break;
         }
-    } while (op != 4);
+    } while (op != 6);
     return 0;
 }
 
