@@ -112,7 +112,7 @@ int main()
         printf(
             "Sistema Viver Bem\n\nSeja Bem vindo!\n\nDigite o número "
             "correspondente ao que deseja abaixo: \n\n1 -- Cadastrar paciente --\n2 -- "
-            "Cadastrar médico --\n3 -- Cadastrar consulta --\n4 -- Cancelar Consulta --\n5 -- Ver consultas --\n6 -- Sair do sistema --\n\n-> ");
+            "Cadastrar médico --\n3 -- Cadastrar consulta --\n4 -- Cancelar Consulta --\n5 -- Sair do sistema --\n\n-> ");
         scanf("%i", &op);
         switch (op)
         {
@@ -131,17 +131,17 @@ int main()
             cancelaConsulta(Consultas);
             break;
         case 5:
-            break;
-        case 6:
             system("cls");
             printf("Programa finalizado. Até breve!\n");
+            break;
+        case 6:
             break;
 
         default:
             printf("Opção inválida");
             break;
         }
-    } while (op != 6);
+    } while (op != 5);
     return 0;
 }
 
