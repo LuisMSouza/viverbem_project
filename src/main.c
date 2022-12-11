@@ -112,7 +112,18 @@ int main()
             imprimeConsulta(Consultas);
             break;
         case 5:
-            imprimeConsultaMedico(Consultas);
+            int opcao;
+            printf(
+                "\n----------Sistema Viver Bem----------\n\nDigite o número "
+                "correspondente ao que deseja abaixo: \n\n1 -- Por código --\n2 Por nome ---> ");
+            scanf("%i", &opcao);
+            if (opcao == 1)
+            {
+                imprimeConsultaMedico(Consultas);
+            }
+            else if (opcao == 2)
+            {
+            }
             break;
         case 6:
             break;
@@ -311,6 +322,7 @@ int verifyConsultingMed(FILE *Consultas, int codigo)
     int posicao = -1, find = 0;
     fseek(Consultas, 0, SEEK_SET);
     fread(&createConsulta, sizeof(createConsulta), 1, Consultas);
+
     while (!feof(Consultas) && !find)
     {
         posicao++;
@@ -327,6 +339,37 @@ int verifyConsultingMed(FILE *Consultas, int codigo)
     else
     {
         return -1;
+    }
+}
+
+int verifyConsultingMedByName(FILE *Consultas, char name[50])
+{
+    int posicao = -1, find = 0;
+    fseek(Consultas, 0, SEEK_SET);
+    fread(&createConsulta, sizeof(createConsulta), 1, Consultas);
+    fseek(Medicos, 0, SEEK_SET);
+    fread(&medicosEntity, sizeof(medicosEntity), 1, Medicos);
+
+    if (medicosEntity.nome == name)
+    {
+        int codigo = medicosEntity.cod;
+        while (!feof(Consultas) && !find)
+        {
+            posicao++;
+            if (createConsulta.medID == codigo)
+            {
+                find = 1;
+            }
+            fread(&createConsulta, sizeof(createConsulta), 1, Consultas);
+        }
+        if (find)
+        {
+            return posicao;
+        }
+        else
+        {
+            return -1;
+        }
     }
 }
 
