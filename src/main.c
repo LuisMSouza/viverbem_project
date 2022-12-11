@@ -86,7 +86,7 @@ int main()
 {
     setlocale(LC_ALL, "portuguese");
     IniciarArquivos(Pacientes, Medicos, Consultas);
-
+    system("cls");
     int op;
     do
     {
@@ -112,18 +112,7 @@ int main()
             imprimeConsulta(Consultas);
             break;
         case 5:
-            int opcao;
-            printf(
-                "\n----------Sistema Viver Bem----------\n\nDigite o número "
-                "correspondente ao que deseja abaixo: \n\n1 -- Por código --\n2 Por nome ---> ");
-            scanf("%i", &opcao);
-            if (opcao == 1)
-            {
-                imprimeConsultaMedico(Consultas);
-            }
-            else if (opcao == 2)
-            {
-            }
+            Selection();
             break;
         case 6:
             break;
@@ -134,6 +123,24 @@ int main()
         }
     } while (op != 6);
     return 0;
+}
+
+void Selection()
+{
+    int opcao;
+    system("cls");
+    printf(
+        "\n----------Sistema Viver Bem----------\n\nDigite o número "
+        "correspondente ao que deseja abaixo: \n\n1 -- Por código --\n2 -- Por nome --\n\n---> ");
+    scanf("%i", &opcao);
+    if (opcao == 1)
+    {
+        imprimeConsultaMedico(Consultas);
+    }
+    else if (opcao == 2)
+    {
+        imprimeConsultaMedicoByName(Consultas);
+    }
 }
 
 void CadEndereco(PacienteCad *cad)
@@ -373,6 +380,30 @@ int verifyConsultingMedByName(FILE *Consultas, char name[50])
     }
 }
 
+void imprimeConsultaMedicoByName(FILE *Consultas)
+{
+    system("cls");
+    printf("\n---------Imprimir Consulta---------\n\n");
+    char nameMed[50];
+    printf("\nNome do Médico: ");
+    fflush(stdin);
+    gets(nameMed);
+    int posicao = verifyConsultingMedByName(Consultas, nameMed);
+    if (posicao != -1)
+    {
+        fseek(Consultas, posicao * sizeof(createConsulta), SEEK_SET);
+        fread(&createConsulta, sizeof(createConsulta), 1, Consultas);
+        printf("\nCódigo da consulta: %d", createConsulta.cod);
+        printf("\nCódigo do medico: %d", createConsulta.medID);
+        printf("\nCódigo do paciente: %d", createConsulta.pacienteID);
+        printf("\nData da consulta: %i/%i/%i - %i:%i\n\n", createConsulta.cad_data.dia, createConsulta.cad_data.mes, createConsulta.cad_data.ano, createConsulta.cad_data.hora, createConsulta.cad_data.min);
+    }
+    else
+    {
+        printf("Não existe consultas para esse médico!\n");
+    }
+}
+
 void cadastraConsulta(FILE *Consultas, FILE *Medicos, FILE *Pacientes)
 {
     system("cls");
@@ -396,7 +427,6 @@ void cadastraConsulta(FILE *Consultas, FILE *Medicos, FILE *Pacientes)
             posicaopaciente = VerifyId(Pacientes, codepaciente);
             if (posicaopaciente != -1)
             {
-                int dat;
                 c.medID = codemedico;
                 c.pacienteID = codepaciente;
                 printf("Digite a data da consulta: ");
@@ -424,13 +454,13 @@ void cadastraConsulta(FILE *Consultas, FILE *Medicos, FILE *Pacientes)
     }
 }
 
-void cancelaConsulta(FILE *Consultas)
-{
-    int codConsulta;
-    printf("\nCódigo da consulta: ");
-    scanf("%d", &codConsulta);
-    remove('/src/data/consultas.txt');
-}
+// void cancelaConsulta(FILE *Consultas)
+// {
+//     int codConsulta;
+//     printf("\nCódigo da consulta: ");
+//     scanf("%d", &codConsulta);
+//     remove('/src/data/consultas.txt');
+// }
 
 void imprimeConsulta(FILE *Consultas)
 {
@@ -458,7 +488,7 @@ void imprimeConsulta(FILE *Consultas)
 void imprimeConsultaMedico(FILE *Consultas)
 {
     system("cls");
-    printf("\n Imprimir Consulta\n\n");
+    printf("\n---------Imprimir Consulta---------\n\n");
     int codMedico;
     printf("\nCódigo do Médico: ");
     scanf("%d", &codMedico);
@@ -474,6 +504,6 @@ void imprimeConsultaMedico(FILE *Consultas)
     }
     else
     {
-        printf("Não existe consulta com esse código!\n");
+        printf("Não existe consultas para esse médico!\n");
     }
 }
