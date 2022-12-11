@@ -40,32 +40,13 @@ MedicoCad medicosEntity;
 
 typedef struct
 {
-    int dia, mes, ano;
-    char hora[8];
+    int dia, mes, ano, hora, min;
 } Data;
-
-Data Registro(char message[], int type)
-{
-    Data d;
-
-    printf("%s (dd/mm/aaaa): ", message);
-    scanf("%i/%i/%i", &d.dia, &d.mes, &d.ano);
-    if (type)
-    {
-        printf("%s (xx:xx): ", message);
-        fflush(stdin);
-        gets(d.hora);
-    }
-
-    return (d);
-}
-
-Data dataEntity;
 
 typedef struct
 {
     int cod, medID, pacienteID;
-    Data data;
+    Data cad_data;
 } ConsultaCad;
 
 ConsultaCad createConsulta;
@@ -110,9 +91,9 @@ int main()
     do
     {
         printf(
-            "Sistema Viver Bem\n\nSeja Bem vindo!\n\nDigite o número "
+            "\n----------Sistema Viver Bem----------\n\nDigite o número "
             "correspondente ao que deseja abaixo: \n\n1 -- Cadastrar paciente --\n2 -- "
-            "Cadastrar médico --\n3 -- Cadastrar consulta --\n4 -- Cancelar Consulta --\n5 -- Sair do sistema --\n\n-> ");
+            "Cadastrar médico --\n3 -- Cadastrar consulta --\n4 -- Pesquisar consulta --\n5 -- Pesquisar consultas de um médico --\n\n-> ");
         scanf("%i", &op);
         switch (op)
         {
@@ -128,11 +109,10 @@ int main()
             cadastraConsulta(Consultas, Medicos, Pacientes);
             break;
         case 4:
-            cancelaConsulta(Consultas);
+            imprimeConsulta(Consultas);
             break;
         case 5:
-            system("cls");
-            printf("Programa finalizado. Até breve!\n");
+            imprimeConsultaMedico(Consultas);
             break;
         case 6:
             break;
@@ -141,7 +121,7 @@ int main()
             printf("Opção inválida");
             break;
         }
-    } while (op != 5);
+    } while (op != 6);
     return 0;
 }
 
@@ -189,7 +169,6 @@ void cadastraPaciente(FILE *Pacientes)
         fflush(stdin);
         gets(pacienteEntity.nome);
 
-        Registro("Digite a data de nascimento: ", 0);
         cadastraTelefone(&pacienteEntity.num);
         CadEndereco(&pacienteEntity.endereco);
 
@@ -327,10 +306,35 @@ int verifyConsulting(FILE *Consultas, int codigo)
     }
 }
 
+int verifyConsultingMed(FILE *Consultas, int codigo)
+{
+    int posicao = -1, find = 0;
+    fseek(Consultas, 0, SEEK_SET);
+    fread(&createConsulta, sizeof(createConsulta), 1, Consultas);
+    while (!feof(Consultas) && !find)
+    {
+        posicao++;
+        if (createConsulta.medID == codigo)
+        {
+            find = 1;
+        }
+        fread(&createConsulta, sizeof(createConsulta), 1, Consultas);
+    }
+    if (find)
+    {
+        return posicao;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
 void cadastraConsulta(FILE *Consultas, FILE *Medicos, FILE *Pacientes)
 {
     system("cls");
     MedicoCad m;
+    ConsultaCad c;
     printf("\n Cadastrar Consulta\n\n");
     int posicaomedico, posicaopaciente, position, codigo, codepaciente, codemedico;
     printf("\nCódigo da consulta: ");
@@ -342,7 +346,6 @@ void cadastraConsulta(FILE *Consultas, FILE *Medicos, FILE *Pacientes)
         printf("Digite o codigo do medico: ");
         scanf("%i", &codemedico);
         posicaomedico = encontraMedico(Medicos, codemedico);
-
         if (posicaomedico != -1)
         {
             printf("Digite o codigo do paciente: ");
@@ -350,10 +353,14 @@ void cadastraConsulta(FILE *Consultas, FILE *Medicos, FILE *Pacientes)
             posicaopaciente = VerifyId(Pacientes, codepaciente);
             if (posicaopaciente != -1)
             {
-                createConsulta.medID = codemedico;
-                createConsulta.pacienteID = codepaciente;
-                Registro("Digite a data da consulta: ", 1);
-                fwrite(&createConsulta, sizeof(createConsulta), 1, Consultas);
+                int dat;
+                c.medID = codemedico;
+                c.pacienteID = codepaciente;
+                printf("Digite a data da consulta: ");
+                scanf("%i/%i/%i", &c.cad_data.dia, &c.cad_data.mes, &c.cad_data.ano);
+                printf("Digite a hora da consulta (xx:xx): ");
+                scanf("%i:%i", &c.cad_data.hora, &c.cad_data.min);
+                fwrite(&c, sizeof(c), 1, Consultas);
                 fflush(Consultas);
                 printf("Consulta registrada com sucesso!");
                 fclose(Consultas);
@@ -380,4 +387,50 @@ void cancelaConsulta(FILE *Consultas)
     printf("\nCódigo da consulta: ");
     scanf("%d", &codConsulta);
     remove('/src/data/consultas.txt');
+}
+
+void imprimeConsulta(FILE *Consultas)
+{
+    system("cls");
+    printf("\n Imprimir Consulta\n\n");
+    int codConsulta;
+    printf("\nCódigo da consulta: ");
+    scanf("%d", &codConsulta);
+    int posicao = verifyConsulting(Consultas, codConsulta);
+    if (posicao != -1)
+    {
+        fseek(Consultas, posicao * sizeof(createConsulta), SEEK_SET);
+        fread(&createConsulta, sizeof(createConsulta), 1, Consultas);
+        printf("\nCódigo da consulta: %d", createConsulta.cod);
+        printf("\nCódigo do medico: %d", createConsulta.medID);
+        printf("\nCódigo do paciente: %d", createConsulta.pacienteID);
+        printf("\nData da consulta: %i/%i/%i - %i:%i\n\n", createConsulta.cad_data.dia, createConsulta.cad_data.mes, createConsulta.cad_data.ano, createConsulta.cad_data.hora, createConsulta.cad_data.min);
+    }
+    else
+    {
+        printf("Não existe consulta com esse código!\n");
+    }
+}
+
+void imprimeConsultaMedico(FILE *Consultas)
+{
+    system("cls");
+    printf("\n Imprimir Consulta\n\n");
+    int codMedico;
+    printf("\nCódigo do Médico: ");
+    scanf("%d", &codMedico);
+    int posicao = verifyConsultingMed(Consultas, codMedico);
+    if (posicao != -1)
+    {
+        fseek(Consultas, posicao * sizeof(createConsulta), SEEK_SET);
+        fread(&createConsulta, sizeof(createConsulta), 1, Consultas);
+        printf("\nCódigo da consulta: %d", createConsulta.cod);
+        printf("\nCódigo do medico: %d", createConsulta.medID);
+        printf("\nCódigo do paciente: %d", createConsulta.pacienteID);
+        printf("\nData da consulta: %i/%i/%i - %i:%i\n\n", createConsulta.cad_data.dia, createConsulta.cad_data.mes, createConsulta.cad_data.ano, createConsulta.cad_data.hora, createConsulta.cad_data.min);
+    }
+    else
+    {
+        printf("Não existe consulta com esse código!\n");
+    }
 }
