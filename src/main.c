@@ -379,5 +379,5 @@ void cancelaConsulta(FILE *Consultas)
     int codConsulta;
     printf("\nCódigo da consulta: ");
     scanf("%d", &codConsulta);
-    remove('./data/consultas.txt');
+    remove('/src/data/consultas.txt');
 }
