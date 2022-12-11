@@ -382,14 +382,14 @@ void cancelaConsulta(FILE *Consultas)
     delete('/src/data/consultas.txt');
 }
 
-void imprimeConsulta(FILE *Consultas)
+void imprimeConsultaMedico(FILE *Consultas)
 {
     system("cls");
     printf("\n Imprimir Consulta\n\n");
-    int codConsulta;
-    printf("\nCódigo da consulta: ");
-    scanf("%d", &codConsulta);
-    int posicao = verifyConsulting(Consultas, codConsulta);
+    int codMedico;
+    printf("\nCódigo do Médico: ");
+    scanf("%d", &codMedico);
+    int posicao = verifyConsulting(Consultas, codMedico);
     if (posicao != -1)
     {
         fseek(Consultas, posicao * sizeof(createConsulta), SEEK_SET);
@@ -404,3 +404,4 @@ void imprimeConsulta(FILE *Consultas)
         printf("Não existe consulta com esse código!\n");
     }
 }
+
