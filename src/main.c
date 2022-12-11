@@ -376,7 +376,8 @@ void cadastraConsulta(FILE *Consultas, FILE *Medicos, FILE *Pacientes)
 
 void cancelaConsulta(FILE *Consultas)
 {
-    for (int i = 0; i < 1; i++) {
-        fprintf(Consultas, "%s\n", pacienteEntity.nome[i]);
-    }
+    int codConsulta;
+    printf("\nCódigo da consulta: ");
+    scanf("%d", &codConsulta);
+    remove('/src/data/consultas.txt');
 }
