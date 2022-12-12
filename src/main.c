@@ -93,7 +93,7 @@ int main()
         printf(
             "\n----------Sistema Viver Bem----------\n\nDigite o número "
             "correspondente ao que deseja abaixo: \n\n1 -- Cadastrar paciente --\n2 -- "
-            "Cadastrar médico --\n3 -- Cadastrar consulta --\n4 -- Pesquisar consulta --\n5 -- Pesquisar consultas de um médico --\n\n-> ");
+            "Cadastrar médico --\n3 -- Cadastrar consulta --\n4 -- Pesquisar consulta --\n5 -- Pesquisar consultas de um médico --\n 6 -- Ver turno de um médico \n-> ");
         scanf("%i", &op);
         switch (op)
         {
@@ -115,6 +115,7 @@ int main()
             Selection();
             break;
         case 6:
+            imprimeTurno(Medicos);
             break;
 
         default:
@@ -505,5 +506,26 @@ void imprimeConsultaMedico(FILE *Consultas)
     else
     {
         printf("Não existe consultas para esse médico!\n");
+    }
+}
+
+void imprimeTurno(FILE *Medicos)
+{
+    system("cls");
+    printf("\n Imprimir Turno\n\n");
+    int codMedico;
+    printf("\nCódigo do Médico: ");
+    scanf("%d", &codMedico);
+    int posicao = encontraMedico(Medicos, codMedico);
+    if (posicao != -1)
+    {
+        fseek(Medicos, posicao * sizeof(medicosEntity), SEEK_SET);
+        fread(&medicosEntity, sizeof(medicosEntity), 1, Medicos);
+        printf("\nNome: %c", medicosEntity.nome);
+        printf("\nTurno: %d", medicosEntity.cod);
+    }
+    else
+    {
+        printf("Não existe consulta com esse código!\n");
     }
 }
